@@ -6,17 +6,17 @@ class Router
     @routes = []
   end
 
-  def add_route(method, path, &action)
-    @routes << { method: method.upcase, path: path, action: action }
+  def add_route(method, path_pattern, &action)
+    @routes << { method: method.upcase, path_pattern: Regexp.new("^#{path_pattern}$"), action: action }
   end
 
   def match_route(request)
     route = @routes.find do |r|
-      r[:method] == request.method && path_match?(r[:path], request.resource)
+      r[:method] == request.method && r[:path_pattern].match(request.resource)
     end
 
     if route
-      route_params = extract_params(route[:path], request.resource)
+      route_params = extract_params(route[:path_pattern], request.resource)
       request.params.merge!(route_params)
       route[:action].call(request)
     else
@@ -30,25 +30,14 @@ class Router
 
   private
 
-  def path_match?(route_path, request_path)
-    route_segments = route_path.split("/")
-    request_segments = request_path.split("/")
-    return false unless route_segments.size == request_segments.size
-
-    route_segments.zip(request_segments).all? do |route_segment, request_segment|
-      route_segment.start_with?(":") || route_segment == request_segment
-    end
-  end
-
   #Extraherar parametrar ur en dynamisk route
-  def extract_params(route_path, request_path)
-    route_segments = route_path.split("/")
-    request_segments = request_path.split("/")
+  def extract_params(path_pattern, resource)
+    match = path_pattern.match(resource)
     params = {}
 
-    route_segments.each_with_index do |segment, index|
-      if segment.start_with?(":")
-        params[segment[1..]] = request_segments[index]
+    if match
+      match.named_captures.each do |key, value|
+        params[key] = value
       end
     end
 
