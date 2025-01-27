@@ -8,7 +8,7 @@ describe 'Request' do
         it 'parses the http method' do
             request_string = File.read('./test/example_requests/get-index.request.txt')
             request = Request.new(request_string)
-            _(request.method).must_equal :get
+            _(request.method).must_equal :GET
         end
 
         it 'parses the resource' do

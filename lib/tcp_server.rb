@@ -56,6 +56,5 @@ class HTTPServer
     end
 end
 
-
 server = HTTPServer.new(4567)
 server.start

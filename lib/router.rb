@@ -40,7 +40,7 @@ class Router
     end
   end
 
-  #Extreherar parametrar ur en dynamisk route
+  #Extraherar parametrar ur en dynamisk route
   def extract_params(route_path, request_path)
     route_segments = route_path.split("/")
     request_segments = request_path.split("/")
