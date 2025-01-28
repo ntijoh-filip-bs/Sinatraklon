@@ -7,7 +7,9 @@ class Router
   end
 
   def add_route(method, path_pattern, &action)
-    @routes << { method: method.upcase, path_pattern: Regexp.new("^#{path_pattern}$"), action: action }
+    #Omvandla :param till regex så man inte behöver skriva regexs när man lägger till en route
+    regex_pattern = convert_path_to_regex(path_pattern)
+    @routes << { method: method.upcase, path_pattern: regex_pattern, action: action }
   end
 
   def match_route(request)
@@ -29,6 +31,10 @@ class Router
   end
 
   private
+
+  def convert_path_to_regex(path_pattern)
+    Regexp.new("^" + path_pattern.gsub(/:([\w]+)/, '(?<\1>[^/]+)') + "$")
+  end
 
   #Extraherar parametrar ur en dynamisk route
   def extract_params(path_pattern, resource)
