@@ -30,7 +30,7 @@ class Request
     when "GET"
       query_string = @resource.split("?")[1] || ""
       query_string.split("&")
-      .then { |params| reject_map__and_hash(params)}
+        .then { |params| reject_map__and_hash(params)}
         
     when "POST"
       body = lines.drop_while { |line| !line.empty? }[1]

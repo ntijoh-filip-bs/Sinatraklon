@@ -6,6 +6,7 @@ require_relative 'router'
 class HTTPServer
     def initialize(port)
       @port = port
+      @public_dir = "/public"
     end
   
     def start
@@ -26,7 +27,7 @@ class HTTPServer
             response.content_type = "text/html"
             response.body = "<h1>Hello, #{request.params['name']}!</h1>"
           end
-        end 
+        end
   
       while session = server.accept
         data = ""
@@ -52,6 +53,24 @@ class HTTPServer
   
         session.print response.to_s
         session.close
+      end
+    end
+
+    private
+
+    def static_file_request?(resource)
+      path = File.join(@public_dir, resource)
+      File.file?(path) && File.exist?(path)
+    end
+    
+    def serve_static_file(resource)
+      path = File.join(@public_dir, resource)
+      content_type = MIME::Types.type_for(path).first.to_s  
+  
+      Response.new.tap do |response|
+        response.status_code = 200
+        response.content_type = content_type.empty? ? "application/octet-stream" : content_type
+        response.body = File.read(path)
       end
     end
 end
