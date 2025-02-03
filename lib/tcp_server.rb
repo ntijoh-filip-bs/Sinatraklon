@@ -49,7 +49,11 @@ class HTTPServer
         puts data
         puts "-" * 40 
   
-        response = @router.match_route(request)
+        if static_file_request?(request.resource)
+          response = serve_static_file(request.resource)
+        else
+          response = @router.match_route(request)
+        end
   
         session.print response.to_s
         session.close
