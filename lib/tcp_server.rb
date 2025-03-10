@@ -1,4 +1,5 @@
 require 'socket'
+require 'mime-types'
 require_relative 'request'
 require_relative 'response'
 require_relative 'router'
@@ -6,7 +7,7 @@ require_relative 'router'
 class HTTPServer
     def initialize(port)
       @port = port
-      @public_dir = "/public"
+      @public_dir = "public"
     end
   
     def start
@@ -49,6 +50,8 @@ class HTTPServer
         puts data
         puts "-" * 40 
   
+        route = @router.match_route(request)
+        
         if static_file_request?(request.resource)
           response = serve_static_file(request.resource)
         else
@@ -69,12 +72,22 @@ class HTTPServer
     
     def serve_static_file(resource)
       path = File.join(@public_dir, resource)
-      content_type = MIME::Types.type_for(path).first.to_s  
-  
-      Response.new.tap do |response|
-        response.status_code = 200
-        response.content_type = content_type.empty? ? "application/octet-stream" : content_type
-        response.body = File.read(path)
+    
+      if File.exist?(path) && File.file?(path)
+        content_type = MIME::Types.type_for(path).first.to_s
+        content_type = "application/octet-stream" if content_type.empty?
+    
+        Response.new.tap do |response|
+          response.status_code = 200
+          response.content_type = content_type
+          response.body = File.binread(path)
+        end
+      else
+        Response.new.tap do |response|
+          response.status_code = 404
+          response.content_type = "text/html"
+          response.body = "<h1>404 Not Found</h1><p>File not found: #{resource}</p>"
+        end
       end
     end
 end
