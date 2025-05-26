@@ -14,20 +14,8 @@ class HTTPServer
         server = TCPServer.new(@port)
         puts "Listening on #{@port}"
         @router = Router.new
-        @router.add_route("GET", "/") do |_request|
-          Response.new.tap do |response|
-            response.status_code = 200
-            response.content_type = "text/html"
-            response.body = "<h1>Welcome to the Home Page!</h1>"
-          end
-        end
-    
-        @router.add_route("GET", "/hello/:name") do |request|
-          Response.new.tap do |response|
-            response.status_code = 200
-            response.content_type = "text/html"
-            response.body = "<h1>Hello, #{request.params['name']}!</h1>"
-          end
+        @router.add_route("GET", "/") do |params|
+          "<h1>Home page :)</h1>"
         end
   
       while session = server.accept
@@ -52,10 +40,15 @@ class HTTPServer
   
         route = @router.match_route(request)
         
-        if static_file_request?(request.resource)
-          response = serve_static_file(request.resource)
+        if route
+          response = Response.new(200, "text/html", route[:action].call(request.params))
+
+        elsif static_file_request?(request.resource)
+          content_type, body = load_static_file(request.resource)
+          response = Response.new(200, content_type, body)
+
         else
-          response = @router.match_route(request)
+          response = Response.new(404, "text/html", "<h1>404 Not Found</h1><p>#{request.resource} does not exist</p>")
         end
   
         session.print response.to_s
@@ -69,25 +62,16 @@ class HTTPServer
       path = File.join(@public_dir, resource)
       File.file?(path) && File.exist?(path)
     end
-    
-    def serve_static_file(resource)
+     
+    def load_static_file(resource)
       path = File.join(@public_dir, resource)
     
       if File.exist?(path) && File.file?(path)
         content_type = MIME::Types.type_for(path).first.to_s
         content_type = "application/octet-stream" if content_type.empty?
+        body = File.binread(path)
     
-        Response.new.tap do |response|
-          response.status_code = 200
-          response.content_type = content_type
-          response.body = File.binread(path)
-        end
-      else
-        Response.new.tap do |response|
-          response.status_code = 404
-          response.content_type = "text/html"
-          response.body = "<h1>404 Not Found</h1><p>File not found: #{resource}</p>"
-        end
+        [content_type, body]
       end
     end
 end

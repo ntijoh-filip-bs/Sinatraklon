@@ -20,13 +20,9 @@ class Router
     if route
       route_params = extract_params(route[:path_pattern], request.resource)
       request.params.merge!(route_params)
-      route[:action].call(request)
+      return route
     else
-      #Returnera ett 404-svar om ingen route matchar
-      Response.new.tap do |response|
-        response.status_code = 404
-        response.body = "<h1>404 Not Found</h1>"
-      end
+      nil
     end
   end
 

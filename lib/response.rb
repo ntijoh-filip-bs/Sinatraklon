@@ -1,10 +1,10 @@
 class Response
   attr_accessor :status_code, :content_type, :body
 
-  def initialize
-    @status_code = 200
-    @content_type = "text/html"
-    @body = ""
+  def initialize(status_code, content_type, body)
+    @status_code = status_code
+    @content_type = content_type
+    @body = body
   end
 
   def to_s
